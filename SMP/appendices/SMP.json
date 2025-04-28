@@ -1,0 +1,2692 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Service Market Place Botswana API",
+    "description": "API endpoints for the Service Market Place Botswana platform, connecting service seekers and providers.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Default server URL (relative)"
+    },
+     {
+      "url": "http://localhost:5000/api",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Jobs",
+      "description": "Job management endpoints"
+    },
+    {
+      "name": "Bids",
+      "description": "Bid management endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "Locations",
+      "description": "Location management endpoints"
+    },
+    {
+      "name": "Payments",
+      "description": "Payment management endpoints"
+    },
+    {
+      "name": "Categories",
+      "description": "Category management endpoints"
+    },
+    {
+      "name": "Ratings",
+      "description": "Rating management endpoints"
+    },
+     {
+      "name": "Notifications",
+      "description": "Notification management endpoints"
+    }
+  ],
+  "paths": {
+    "/getOpenJobs": {
+      "get": {
+        "summary": "Get all open jobs",
+        "description": "Retrieve a list of all jobs with status 'Open'",
+        "tags": ["Jobs"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of open jobs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/submitBid": {
+      "post": {
+        "summary": "Submit a bid for a job",
+        "description": "Create a new bid for a specific job",
+        "tags": ["Bids"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "jobId",
+                  "providerId",
+                  "amount"
+                ],
+                "properties": {
+                  "jobId": {
+                    "type": "string",
+                    "description": "ID of the job to bid on"
+                  },
+                  "providerId": {
+                    "type": "string",
+                    "description": "ID of the provider submitting the bid"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Bid amount"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Optional message to the seeker"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bid created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+           "404": {
+            "description": "Job or provider not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/seeker/dashboard/{seekerId}": {
+        "get": {
+          "summary": "Get seeker dashboard data",
+          "description": "Retrieve dashboard statistics for a specific seeker",
+          "tags": ["Users"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "seekerId",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "ID of the seeker (MongoDB ObjectId)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Dashboard data retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "openJobs": {
+                        "type": "integer",
+                        "description": "Number of open jobs"
+                      },
+                      "completedJobs": {
+                        "type": "integer",
+                        "description": "Number of completed jobs"
+                      },
+                      "activeBids": {
+                        "type": "integer",
+                        "description": "Number of bids placed by the seeker"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+             "400": {
+              "description": "Missing or invalid seekerId"
+            },
+            "500": {
+              "description": "Server error"
+            }
+          }
+        }
+     },
+     "/completeSignupUser": {
+      "post": {
+        "summary": "Complete user signup (Seeker or initial)",
+        "description": "Allows a user to complete their profile after initial Clerk signup, including optional profile picture upload.",
+        "tags": ["Users"],
+         "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "clerkId",
+                  "userType",
+                  "email"
+                ],
+                "properties": {
+                  "clerkId": {
+                    "type": "string",
+                    "description": "Clerk user ID"
+                  },
+                   "firstName": {
+                    "type": "string",
+                    "description": "User's first name"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "User's last name"
+                  },
+                   "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "User's phone number"
+                  },
+                  "bio": {
+                    "type": "string",
+                    "description": "User's bio or description"
+                  },
+                   "userType": {
+                    "type": "string",
+                    "enum": ["Seeker", "Provider"],
+                    "description": "Type of user (Seeker or Provider)"
+                   },
+                  "profilePicture": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "User's profile picture file"
+                  }
+                }
+              }
+            },
+             "application/json": {
+                 "schema": {
+                     "type": "object",
+                      "required": [
+                         "clerkId",
+                         "userType",
+                         "email"
+                       ],
+                     "properties": {
+                         "clerkId": { "type": "string" },
+                         "firstName": { "type": "string" },
+                         "lastName": { "type": "string" },
+                         "email": { "type": "string", "format": "email" },
+                         "phoneNumber": { "type": "string" },
+                         "bio": { "type": "string" },
+                         "userType": { "type": "string", "enum": ["Seeker", "Provider"] }
+                     },
+                     "description": "JSON payload for updates without file upload"
+                 }
+             }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+             "content": {
+                "application/json": {
+                  "schema": {
+                     "type": "object",
+                     "properties": {
+                         "message": {"type": "string"},
+                         "user": {"$ref": "#/components/schemas/User"}
+                     }
+                  }
+                }
+             }
+          },
+          "201": {
+            "description": "Profile created successfully",
+            "content": {
+                "application/json": {
+                  "schema": {
+                     "type": "object",
+                     "properties": {
+                         "message": {"type": "string"},
+                         "user": {"$ref": "#/components/schemas/User"}
+                     }
+                  }
+                }
+             }
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+      "/completeProviderSignup": {
+         "post": {
+            "summary": "Complete provider signup/profile update",
+            "description": "Allows a user to complete or update their provider profile, including category and attributes, with optional profile picture.",
+            "tags": ["Users"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "requestBody": {
+               "required": true,
+               "content": {
+                  "multipart/form-data": {
+                     "schema": {
+                        "type": "object",
+                        "required": [
+                           "clerkId",
+                           "email",
+                           "categoryId"
+                        ],
+                        "properties": {
+                           "clerkId": { "type": "string" },
+                           "firstName": { "type": "string" },
+                           "lastName": { "type": "string" },
+                           "email": { "type": "string", "format": "email" },
+                           "phoneNumber": { "type": "string" },
+                           "bio": { "type": "string" },
+                           "categoryId": { "type": "string", "description": "Main category ID provider belongs to" },
+                           "attributes": {
+                              "type": "object",
+                              "additionalProperties": {
+                                 "type": "string"
+                              },
+                              "description": "Dynamic attributes specific to the category"
+                           },
+                           "profilePicture": {
+                              "type": "string",
+                              "format": "binary"
+                           }
+                        }
+                     },
+                     "encoding": {
+                        "attributes": {
+                           "contentType": "application/json"
+                        }
+                     }
+                  }
+               }
+            },
+            "responses": {
+               "200": {
+                  "description": "Provider profile updated successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "message": { "type": "string" },
+                              "user": { "$ref": "#/components/schemas/User" }
+                           }
+                        }
+                     }
+                  }
+               },
+               "201": {
+                  "description": "New provider profile created successfully",
+                   "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "message": { "type": "string" },
+                              "user": { "$ref": "#/components/schemas/User" }
+                           }
+                        }
+                     }
+                   }
+               },
+               "400": { "description": "Missing required fields or invalid data" },
+               "500": { "description": "Server error" }
+            }
+         }
+      },
+     "/getProviderDashboard/{clerkId}": {
+         "get": {
+            "summary": "Get provider dashboard data",
+            "description": "Retrieve dashboard statistics for a specific provider using their Clerk ID.",
+            "tags": ["Users"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "clerkId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "Clerk ID of the provider"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "Provider dashboard data retrieved successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "activeBids": { "type": "integer", "description": "Number of bids provider has placed that are still pending." },
+                              "jobsWon": { "type": "integer", "description": "Number of bids provider has placed that have been accepted." },
+                              "completedJobs": { "type": "integer", "description": "Number of jobs provider has completed." }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404": { "description": "Provider not found" },
+               "500": { "description": "Server error" }
+            }
+         }
+     },
+      "/getProviderJobHistory/{providerId}": {
+        "get": {
+          "summary": "Get provider job history",
+          "description": "Retrieve a list of jobs a provider has been assigned to (In Progress, Completed, Cancelled).",
+          "tags": ["Jobs", "Users"],
+           "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "providerId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the provider"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Job history retrieved successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Job" }
+                  }
+                }
+              }
+            },
+            "400": { "description": "Invalid providerId format" },
+            "500": { "description": "Server error" }
+          }
+        }
+      },
+       "/getProviderJobsAttempted/{providerId}": {
+         "get": {
+            "summary": "Get count of jobs attempted by provider",
+            "description": "Retrieve the number of bids a provider has placed that were rejected.",
+            "tags": ["Users", "Bids"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "providerId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "MongoDB ObjectId of the provider"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "Count retrieved successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "jobsAttempted": { "type": "integer" }
+                           }
+                        }
+                     }
+                  }
+               },
+               "400": { "description": "Invalid providerId format" },
+               "500": { "description": "Server error" }
+            }
+         }
+       },
+       "/getProviderCompletedJobs/{providerId}": {
+         "get": {
+            "summary": "Get count of jobs completed by provider",
+            "description": "Retrieve the number of jobs assigned to and completed by a provider.",
+            "tags": ["Users", "Jobs"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "providerId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "MongoDB ObjectId of the provider"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "Count retrieved successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "completedJobs": { "type": "integer" }
+                           }
+                        }
+                     }
+                  }
+               },
+               "400": { "description": "Invalid providerId format" },
+               "500": { "description": "Server error" }
+            }
+         }
+       },
+       "/getProviderAmountEarned/{providerId}": {
+          "get": {
+             "summary": "Get total amount earned by provider",
+             "description": "Calculates and retrieves the total amount earned by a provider from completed jobs.",
+             "tags": ["Users", "Payments"],
+              "security": [
+                {
+                  "ClerkAuth": []
+                }
+              ],
+             "parameters": [
+                {
+                   "in": "path",
+                   "name": "providerId",
+                   "required": true,
+                   "schema": { "type": "string" },
+                   "description": "MongoDB ObjectId of the provider"
+                }
+             ],
+             "responses": {
+                "200": {
+                   "description": "Amount earned retrieved successfully",
+                   "content": {
+                      "application/json": {
+                         "schema": {
+                            "type": "object",
+                            "properties": {
+                               "amountEarned": { "type": "number", "format": "double" }
+                            }
+                         }
+                      }
+                   }
+                },
+                "400": { "description": "Invalid providerId format" },
+                "500": { "description": "Server error" }
+             }
+          }
+       },
+       "/getProviderLastCompletedJob/{providerId}": {
+         "get": {
+            "summary": "Get timestamp of provider's last completed job",
+            "description": "Retrieves the completion timestamp of the most recently completed job for a provider.",
+            "tags": ["Users", "Jobs"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "providerId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "MongoDB ObjectId of the provider"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "Last completed job timestamp retrieved successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "lastCompletedJob": {
+                                 "type": "string",
+                                 "format": "date-time",
+                                 "nullable": true,
+                                 "description": "Timestamp of last completed job's update date, or null if none."
+                               }
+                           }
+                        }
+                     }
+                  }
+               },
+               "400": { "description": "Invalid providerId format" },
+               "500": { "description": "Server error" }
+            }
+         }
+       },
+        "/getProviderJobsWon/{providerId}": {
+          "get": {
+            "summary": "Get count of jobs won by provider (Accepted Bids)",
+            "description": "Retrieves the number of bids placed by a provider that were accepted.",
+            "tags": ["Users", "Bids"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+              {
+                "in": "path",
+                "name": "providerId",
+                "required": true,
+                "schema": { "type": "string" },
+                "description": "MongoDB ObjectId of the provider"
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Count retrieved successfully",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "jobsWon": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              },
+              "400": { "description": "Invalid providerId format" },
+              "500": { "description": "Server error" }
+            }
+          }
+        },
+       "/provider/addCategory": {
+          "post": {
+             "summary": "Add a category to a provider's profile",
+             "description": "Adds a selected category and associated attributes to a provider's profile.",
+             "tags": ["Users", "Categories"],
+              "security": [
+                {
+                  "ClerkAuth": []
+                }
+              ],
+             "requestBody": {
+                "required": true,
+                "content": {
+                   "application/json": {
+                      "schema": {
+                         "type": "object",
+                         "required": ["categoryId"],
+                         "properties": {
+                            "categoryId": { "type": "string", "description": "ID of the category to add (MongoDB ObjectId)." },
+                            "attributes": {
+                               "type": "object",
+                               "additionalProperties": { "type": "string" },
+                               "description": "Attributes specific to this category."
+                            }
+                         }
+                      }
+                   }
+                }
+             },
+             "responses": {
+                "201": {
+                   "description": "Category added successfully",
+                   "content": {
+                      "application/json": {
+                         "schema": {
+                            "type": "object",
+                            "properties": {
+                               "message": { "type": "string" },
+                               "provider": { "$ref": "#/components/schemas/User" }
+                            }
+                         }
+                      }
+                   }
+                },
+                "400": { "description": "Missing required fields or Category already exists" },
+                "404": { "description": "Provider not found" },
+                "500": { "description": "Internal server error" }
+             }
+          }
+       },
+       "/provider/details/{clerkId}": {
+          "get": {
+             "summary": "Get provider details by Clerk ID",
+             "description": "Retrieves the detailed profile information for a provider using their Clerk user ID.",
+             "tags": ["Users"],
+              "security": [
+                {
+                  "ClerkAuth": []
+                }
+              ],
+             "parameters": [
+                {
+                   "in": "path",
+                   "name": "clerkId",
+                   "required": true,
+                   "schema": { "type": "string" },
+                   "description": "Clerk ID of the provider"
+                }
+             ],
+             "responses": {
+                "200": {
+                   "description": "Provider details retrieved successfully",
+                   "content": {
+                      "application/json": {
+                         "schema": {
+                            "type": "object",
+                            "properties": {
+                               "firstName": { "type": "string" },
+                               "lastName": { "type": "string" },
+                               "email": { "type": "string", "format": "email" },
+                               "phoneNumber": { "type": "string" },
+                               "bio": { "type": "string" },
+                               "providerAttributes": {
+                                  "type": "object",
+                                  "properties": {
+                                     "selectedCategories": {
+                                        "type": "array",
+                                        "items": {
+                                           "type": "object",
+                                           "properties": {
+                                              "categoryId": { "type": "string" },
+                                              "attributes": {
+                                                 "type": "object",
+                                                 "additionalProperties": { "type": "string" }
+                                              }
+                                           }
+                                        }
+                                     }
+                                  },
+                                  "description": "Provider specific attributes including categories."
+                               }
+                            }
+                         }
+                      }
+                   }
+                },
+                "404": { "description": "Provider not found" },
+                "500": { "description": "Internal server error" }
+             }
+          }
+       },
+    "/getUser/{userId}": {
+      "get": {
+        "summary": "Get user by MongoDB ID",
+        "description": "Retrieve user details using their MongoDB ObjectId.",
+        "tags": ["Users"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getUserByClerkId/{clerkId}": {
+       "get": {
+         "summary": "Get user by Clerk ID",
+         "description": "Retrieve user details using their Clerk user ID.",
+         "tags": ["Users"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+           {
+             "in": "path",
+             "name": "clerkId",
+             "required": true,
+             "schema": {
+               "type": "string"
+             },
+             "description": "Clerk user ID"
+           }
+         ],
+         "responses": {
+           "200": {
+             "description": "User found",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "$ref": "#/components/schemas/User"
+                 }
+               }
+             }
+           },
+           "404": {
+             "description": "User not found"
+           },
+           "500": {
+             "description": "Server error"
+           }
+         }
+       }
+    },
+    "/getLocations": {
+      "get": {
+        "summary": "Get all locations",
+        "description": "Retrieve a list of all predefined locations.",
+        "tags": ["Locations"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "responses": {
+          "200": {
+            "description": "List of locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/addJob": {
+      "post": {
+        "summary": "Add a new job",
+        "description": "Allows a seeker to create a new job posting.",
+        "tags": ["Jobs"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "description",
+                  "categoryId",
+                  "category",
+                  "budget",
+                  "location",
+                  "seekerId"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Title of the job"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Full description of the job"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId of the job category"
+                  },
+                   "category": {
+                    "type": "string",
+                    "description": "Name of the job category"
+                  },
+                  "budget": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Budget for the job"
+                  },
+                  "location": {
+                    "$ref": "#/components/schemas/GeoJSONPoint",
+                    "description": "GeoJSON Point object for job location"
+                  },
+                  "altLocationId": {
+                     "type": "string",
+                     "description": "Alternative location ID (if not using GeoJSON)",
+                     "nullable": true
+                   },
+                  "attributes": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Additional attributes for the job",
+                    "nullable": true
+                  },
+                  "seekerId": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId of the seeker posting the job"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields or invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getJobs": {
+       "get": {
+         "summary": "Get all jobs (with optional status filter)",
+         "description": "Retrieve a list of all jobs. Can filter by status.",
+         "tags": ["Jobs"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                 "type": "string",
+                 "enum": ["Open", "In Progress", "Completed", "Cancelled", "Pending"]
+              },
+              "description": "Filter jobs by status"
+            }
+         ],
+         "responses": {
+           "200": {
+             "description": "List of jobs",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "array",
+                   "items": {
+                     "$ref": "#/components/schemas/Job"
+                   }
+                 }
+               }
+             }
+           },
+           "500": {
+             "description": "Server error"
+           }
+         }
+       }
+    },
+    "/getJob/{id}": {
+      "get": {
+        "summary": "Get a single job by ID",
+        "description": "Retrieve details for a specific job using its MongoDB ObjectId.",
+        "tags": ["Jobs"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the job"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/getJobsBySeekerId/{seekerId}": {
+       "get": {
+         "summary": "Get jobs posted by a seeker",
+         "description": "Retrieve a list of jobs posted by a specific seeker using their MongoDB ObjectId, sorted by creation date.",
+         "tags": ["Jobs", "Users"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+           {
+             "in": "path",
+             "name": "seekerId",
+             "required": true,
+             "schema": {
+               "type": "string"
+             },
+             "description": "MongoDB ObjectId of the seeker"
+           }
+         ],
+         "responses": {
+           "200": {
+             "description": "List of jobs posted by the seeker",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "array",
+                   "items": {
+                     "$ref": "#/components/schemas/Job"
+                   }
+                 }
+               }
+             }
+           },
+           "500": {
+             "description": "Server error"
+           }
+         }
+       }
+     },
+     "/seeker/jobs": {
+        "get": {
+          "summary": "Get jobs posted by seeker with status filter",
+          "description": "Retrieve a list of jobs posted by a specific seeker, filtered by job status.",
+          "tags": ["Jobs", "Users"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "seekerId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the seeker"
+            },
+             {
+              "in": "query",
+              "name": "status",
+              "required": true,
+              "schema": {
+                 "type": "string",
+                 "enum": ["Open", "In Progress", "Completed", "Cancelled", "Pending"]
+              },
+              "description": "Filter jobs by status"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of jobs for the seeker with the specified status",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Job" }
+                  }
+                }
+              }
+            },
+            "400": { "description": "Missing or invalid parameters" },
+            "500": { "description": "Server error" }
+          }
+        }
+     },
+      "/checkPaymentStatus/{jobId}": {
+         "get": {
+            "summary": "Check payment status for a job",
+            "description": "Checks if a payment record exists for a job and returns its status.",
+            "tags": ["Payments", "Jobs"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "jobId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "MongoDB ObjectId of the job"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "Payment status retrieved",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "object",
+                           "properties": {
+                              "exists": { "type": "boolean" },
+                              "status": {
+                                 "type": "string",
+                                 "enum": ["Pending", "Completed", "Failed"],
+                                 "nullable": true
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "500": { "description": "Server error" }
+            }
+         }
+      },
+       "/createPayment/{jobId}": {
+         "post": {
+            "summary": "Create a payment record for a job",
+            "description": "Creates a new payment record for a specific job. Amount is typically taken from job's agreedAmount or budget.",
+            "tags": ["Payments", "Jobs"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "parameters": [
+               {
+                  "in": "path",
+                  "name": "jobId",
+                  "required": true,
+                  "schema": { "type": "string" },
+                  "description": "MongoDB ObjectId of the job"
+               }
+            ],
+             "requestBody": {
+                 "description": "Optional: Provide payment details if not inferred from job.",
+                 "required": false,
+                 "content": {
+                     "application/json": {
+                         "schema": {
+                             "type": "object",
+                             "properties": {
+                                 "amount": { "type": "number", "format": "float" },
+                                 "paymentMethod": { "type": "string" }
+                             }
+                         }
+                     }
+                 }
+             },
+            "responses": {
+               "201": {
+                  "description": "Payment created successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": { "$ref": "#/components/schemas/Payment" }
+                     }
+                  }
+               },
+               "400": { "description": "Payment already exists or invalid input" },
+               "404": { "description": "Job not found" },
+               "500": { "description": "Failed to create payment" }
+            }
+         }
+       },
+      "/completeJob/{jobId}": {
+        "post": {
+          "summary": "Mark job as completed (with payment check)",
+          "description": "Marks a job's status as 'Completed' after verifying that the payment for the job is completed.",
+          "tags": ["Jobs", "Payments"],
+           "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "jobId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the job"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Job marked as completed",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": { "type": "string" },
+                      "job": { "$ref": "#/components/schemas/Job" }
+                    }
+                  }
+                }
+              }
+            },
+            "400": { "description": "No payment found or payment not completed" },
+            "404": { "description": "Job not found" },
+            "500": { "description": "Failed to complete job" }
+          }
+        }
+      },
+     "/getOpenJobsWithBidCount": {
+        "get": {
+          "summary": "Get all open jobs with bid count",
+          "description": "Retrieve a list of all open jobs and include the number of bids each job has received.",
+          "tags": ["Jobs", "Bids"],
+           "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of open jobs with bid counts",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "allOf": [
+                        { "$ref": "#/components/schemas/Job" },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "bidCount": {
+                              "type": "integer",
+                              "description": "Number of bids for this job"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error"
+            }
+          }
+        }
+     },
+     "/getOpenJobsForProvider": {
+        "post": {
+          "summary": "Get open jobs matching provider categories",
+          "description": "Retrieve a list of open jobs filtered by categories specified in the request body.",
+          "tags": ["Jobs", "Users", "Categories"],
+           "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["categories"],
+                  "properties": {
+                    "categories": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Array of category names or IDs to filter by"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "List of matching open jobs",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Job" }
+                  }
+                }
+              }
+            },
+            "400": { "description": "No categories provided or invalid input" },
+            "500": { "description": "Server error" }
+          }
+        }
+     },
+      "/getAllJobs": {
+         "get": {
+            "summary": "Get all jobs",
+            "description": "Retrieves a list of all job postings in the system, sorted by creation date.",
+            "tags": ["Jobs"],
+             "security": [
+               {
+                 "ClerkAuth": []
+               }
+             ],
+            "responses": {
+               "200": {
+                  "description": "List of all jobs retrieved successfully",
+                  "content": {
+                     "application/json": {
+                        "schema": {
+                           "type": "array",
+                           "items": { "$ref": "#/components/schemas/Job" }
+                        }
+                     }
+                  }
+               },
+               "500": { "description": "Error fetching jobs from database" }
+            }
+         }
+      },
+    "/addBid": {
+      "post": {
+        "summary": "Add a bid",
+        "description": "Allows a provider to place a bid on a job.",
+        "tags": ["Bids"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "jobId",
+                  "providerId",
+                  "amount",
+                  "seekerId"
+                ],
+                "properties": {
+                  "jobId": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId of the job being bid on"
+                  },
+                  "providerId": {
+                    "type": "string",
+                    "description": "Clerk ID of the provider placing the bid"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Bid amount"
+                  },
+                   "seekerId": {
+                     "type": "string",
+                     "description": "MongoDB ObjectId of the seeker (redundant if job is sent, but included based on code)"
+                   }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bid created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+           "404": {
+            "description": "Job or Provider not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getBids/{jobId}": {
+      "get": {
+        "summary": "Get bids for a job (with provider details)",
+        "description": "Retrieve a list of bids for a specific job, including populated provider details.",
+        "tags": ["Bids", "Jobs", "Users"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "jobId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the job"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of bids with provider details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                       { "$ref": "#/components/schemas/Bid" },
+                       {
+                           "type": "object",
+                           "properties": {
+                               "providerInfo": { "$ref": "#/components/schemas/User" }
+                           }
+                       }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/getSimpleBids/{jobId}": {
+       "get": {
+         "summary": "Get simple bids for a job (no provider details)",
+         "description": "Retrieve a list of bids for a specific job without populating provider details. Useful for bid counts.",
+         "tags": ["Bids", "Jobs"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+           {
+             "in": "path",
+             "name": "jobId",
+             "required": true,
+             "schema": {
+               "type": "string"
+             },
+             "description": "MongoDB ObjectId of the job"
+           }
+         ],
+         "responses": {
+           "200": {
+             "description": "List of simple bids",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "array",
+                   "items": {
+                     "$ref": "#/components/schemas/Bid"
+                   }
+                 }
+               }
+             }
+           },
+           "500": {
+             "description": "Server error"
+           }
+         }
+       }
+     },
+    "/getBid/{id}": {
+      "get": {
+        "summary": "Get a single bid by ID",
+        "description": "Retrieve details for a specific bid using its MongoDB ObjectId.",
+        "tags": ["Bids"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bid found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bid"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bid not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/addProvider": {
+      "post": {
+        "summary": "Add a new provider",
+        "description": "Allows a new user to register as a provider, including profile details and category/attributes. Uses multipart/form-data.",
+        "tags": ["Users"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "clerkId",
+                  "email",
+                  "category"
+                ],
+                "properties": {
+                  "clerkId": {
+                    "type": "string",
+                    "description": "Clerk user ID"
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "description": "Provider's first name"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Provider's last name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Provider's email address"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "description": "Provider's phone number"
+                  },
+                  "bio": {
+                    "type": "string",
+                    "description": "Provider's bio or description"
+                  },
+                   "birthday": {
+                     "type": "string",
+                     "format": "date",
+                     "description": "Provider's birthday",
+                     "nullable": true
+                   },
+                   "baseLocation": {
+                      "type": "object",
+                       "properties": {
+                           "lat": {"type": "number", "format": "float"},
+                           "lng": {"type": "number", "format": "float"}
+                       },
+                      "description": "Provider's base geographical location (lat/lng)",
+                       "nullable": true
+                   },
+                  "category": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId of the primary category the provider belongs to."
+                  },
+                   "attributes": {
+                     "type": "object",
+                      "additionalProperties": { "type": "string" },
+                      "description": "Dynamic attributes specific to the provider's category. Sent as `attributes[key]=value` in form-data."
+                   },
+                  "profilePicture": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Provider's profile picture file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Provider created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields or invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/addPayment": {
+      "post": {
+        "summary": "Add a new payment record",
+        "description": "Creates a new payment record in the database.",
+        "tags": ["Payments"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Payment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getPayments": {
+      "get": {
+        "summary": "Get all payments (with optional job filter)",
+        "description": "Retrieve a list of all payment records. Can filter by jobId.",
+        "tags": ["Payments"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+            {
+              "in": "query",
+              "name": "jobId",
+              "schema": { "type": "string" },
+              "description": "Filter payments by job ID (MongoDB ObjectId)"
+            }
+         ],
+        "responses": {
+          "200": {
+            "description": "List of payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Payment"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getPayment/{id}": {
+      "get": {
+        "summary": "Get a single payment by ID",
+        "description": "Retrieve details for a specific payment using its MongoDB ObjectId.",
+        "tags": ["Payments"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the payment"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/addCategory": {
+      "post": {
+        "summary": "Add a new category",
+        "description": "Creates a new job category.",
+        "tags": ["Categories"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Category"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/getCategories": {
+       "get": {
+         "summary": "Get all categories",
+         "description": "Retrieve a list of all job categories.",
+         "tags": ["Categories"],
+          "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "responses": {
+           "200": {
+             "description": "List of categories",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "array",
+                   "items": {
+                     "$ref": "#/components/schemas/Category"
+                   }
+                 }
+               }
+             }
+           },
+           "500": {
+             "description": "Server error"
+           }
+         }
+       }
+     },
+    "/getCategory/{id}": {
+      "get": {
+        "summary": "Get a single category by ID",
+        "description": "Retrieve details for a specific category using its MongoDB ObjectId.",
+        "tags": ["Categories"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the category"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/addAddress": {
+      "post": {
+        "summary": "Add a new address",
+        "description": "Creates a new address record (likely for a user or job location).",
+        "tags": ["Locations"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Address"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Address created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Address"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getAddresses": {
+      "get": {
+        "summary": "Get all addresses",
+        "description": "Retrieve a list of all address records.",
+        "tags": ["Locations"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "responses": {
+          "200": {
+            "description": "List of addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Address"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getAddress/{id}": {
+      "get": {
+        "summary": "Get a single address by ID",
+        "description": "Retrieve details for a specific address using its MongoDB ObjectId.",
+        "tags": ["Locations"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the address"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Address found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Address"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Address not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/addRating": {
+      "post": {
+        "summary": "Add a new rating",
+        "description": "Creates a new rating and review record.",
+        "tags": ["Ratings"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rating"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rating created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rating"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getRatings": {
+      "get": {
+        "summary": "Get all ratings (with optional user filter)",
+        "description": "Retrieve a list of all rating records. Can filter by userId.",
+        "tags": ["Ratings"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+         "parameters": [
+            {
+              "in": "query",
+              "name": "userId",
+              "schema": { "type": "string" },
+              "description": "Filter ratings by user ID (MongoDB ObjectId)"
+            }
+         ],
+        "responses": {
+          "200": {
+            "description": "List of ratings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Rating"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/getRating/{id}": {
+      "get": {
+        "summary": "Get a single rating by ID",
+        "description": "Retrieve details for a specific rating using its MongoDB ObjectId.",
+        "tags": ["Ratings"],
+         "security": [
+            {
+              "ClerkAuth": []
+            }
+          ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the rating"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rating found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rating"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rating not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+     "/notifications/{userId}": {
+        "get": {
+          "summary": "Get notifications for a user",
+          "description": "Retrieve a list of notifications for a specific user.",
+          "tags": ["Notifications", "Users"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the user"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of notifications",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/Notification" }
+                  }
+                }
+              }
+            },
+            "500": { "description": "Server error" }
+          }
+        }
+     },
+     "/notifications/{notificationId}/read": {
+        "put": {
+          "summary": "Mark notification as read",
+          "description": "Marks a specific notification as read.",
+          "tags": ["Notifications"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "notificationId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the notification"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Notification marked as read",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            },
+            "500": { "description": "Error updating notification" }
+          }
+        }
+     },
+     "/jobs/{jobId}/status": {
+        "put": {
+          "summary": "Update job status",
+          "description": "Updates the status of a specific job.",
+          "tags": ["Jobs"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "jobId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the job"
+            }
+          ],
+           "requestBody": {
+             "required": true,
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "type": "object",
+                   "required": ["status"],
+                   "properties": {
+                     "status": {
+                       "type": "string",
+                       "enum": ["Open", "In Progress", "Completed", "Cancelled", "Pending"],
+                       "description": "New status for the job"
+                     }
+                   }
+                 }
+               }
+             }
+           },
+          "responses": {
+            "200": {
+              "description": "Job status updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            },
+            "500": { "description": "Error updating job status" }
+          }
+        }
+     },
+     "/notifications/{userId}/read-all": {
+        "patch": {
+          "summary": "Mark all notifications as read for a user",
+          "description": "Marks all pending notifications for a specific user as read.",
+          "tags": ["Notifications", "Users"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the user"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "All notifications marked as read",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            },
+            "500": { "description": "Error updating notifications" }
+          }
+        }
+     },
+      "/calculateMatchScore/{jobId}/{providerId}": {
+        "get": {
+          "summary": "Calculate match score between job and provider",
+          "description": "Calculates a match score based on category, attributes, and location proximity.",
+          "tags": ["Jobs", "Users"],
+           "security": [
+             {
+               "ClerkAuth": []
+             }
+           ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "jobId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the job"
+            },
+            {
+              "in": "path",
+              "name": "providerId",
+              "required": true,
+              "schema": { "type": "string" },
+              "description": "MongoDB ObjectId of the provider"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Match score calculated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "score": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            },
+            "404": { "description": "Job or provider not found" },
+            "500": { "description": "Error calculating match score" }
+          }
+        }
+      }
+  },
+  "components": {
+    "schemas": {
+      "Job": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "MongoDB ObjectId"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of Category"
+          },
+           "category": {
+            "type": "string",
+            "description": "Name of the category"
+          },
+          "budget": {
+            "type": "number",
+            "format": "float"
+          },
+           "location": {
+            "$ref": "#/components/schemas/GeoJSONPoint"
+           },
+           "altLocationId": {
+             "type": "string",
+             "description": "Alternative location ID if GeoJSON is not used",
+             "nullable": true
+           },
+          "seekerId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the seeker"
+          },
+           "providerId": {
+             "type": "string",
+             "description": "MongoDB ObjectId of the assigned provider",
+             "nullable": true
+           },
+           "agreedAmount": {
+              "type": "number",
+               "format": "float",
+               "description": "Agreed amount after bid acceptance",
+               "nullable": true
+           },
+            "startedAt": {
+              "type": "string",
+              "format": "date-time",
+               "description": "Timestamp when job status changed to In Progress",
+               "nullable": true
+            },
+            "completedAt": {
+              "type": "string",
+              "format": "date-time",
+               "description": "Timestamp when job status changed to Completed",
+               "nullable": true
+            },
+          "status": {
+            "type": "string",
+            "enum": ["Open", "In Progress", "Completed", "Cancelled", "Pending"],
+            "default": "Open"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+           "attributes": {
+              "type": "object",
+               "additionalProperties": { "type": "string" },
+               "description": "Additional job attributes",
+               "nullable": true
+           }
+        }
+      },
+      "Bid": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "MongoDB ObjectId"
+          },
+          "jobId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of Job"
+          },
+          "seekerId": {
+             "type": "string",
+             "description": "MongoDB ObjectId of Seeker who owns the job"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of Provider"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float"
+          },
+           "description": {
+             "type": "string",
+             "description": "Optional message from the provider",
+             "nullable": true
+           },
+           "status": {
+             "type": "string",
+             "enum": ["Pending", "Accepted", "Rejected"],
+             "default": "Pending",
+              "description": "Status of the bid"
+           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "MongoDB ObjectId"
+          },
+          "clerkId": {
+            "type": "string",
+            "description": "Clerk user ID"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+           "profilePicture": {
+             "type": "string",
+             "description": "URL or path to profile picture",
+             "nullable": true
+           },
+           "bio": {
+             "type": "string",
+             "description": "User's bio",
+             "nullable": true
+           },
+          "userType": {
+            "type": "string",
+            "enum": ["Seeker", "Provider"],
+            "default": "Seeker"
+          },
+           "providerAttributes": {
+             "type": "object",
+             "properties": {
+                "birthday": { "type": "string", "format": "date", "nullable": true },
+                "baseLocation": {
+                    "type": "object",
+                     "properties": {
+                         "lat": {"type": "number", "format": "float"},
+                         "lng": {"type": "number", "format": "float"}
+                     },
+                     "description": "Provider's base location (lat/lng)",
+                     "nullable": true
+                 },
+                 "selectedCategories": {
+                    "type": "array",
+                     "items": {
+                         "type": "object",
+                         "properties": {
+                            "categoryId": { "type": "string" },
+                            "attributes": { "type": "object", "additionalProperties": { "type": "string" } }
+                         }
+                     },
+                     "description": "Categories the provider offers services in and their attributes."
+                 }
+             },
+             "description": "Attributes specific to providers",
+             "nullable": true
+           },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+           
+        }
+      },
+      "Location": {
+         "type": "object",
+          "properties": {
+             "_id": { "type": "string", "description": "MongoDB ObjectId" },
+             "name": { "type": "string" },
+             "coordinates": { "$ref": "#/components/schemas/GeoJSONPoint" }
+          }
+      },
+       "Payment": {
+           "type": "object",
+           "properties": {
+               "_id": { "type": "string", "description": "MongoDB ObjectId" },
+               "jobId": { "type": "string", "description": "MongoDB ObjectId of the related job" },
+               "seekerId": { "type": "string", "description": "MongoDB ObjectId of the seeker" },
+               "providerId": { "type": "string", "description": "MongoDB ObjectId of the provider" },
+               "amount": { "type": "number", "format": "float" },
+               "paymentMethod": { "type": "string", "description": "Method of payment" },
+               "paymentStatus": {
+                   "type": "string",
+                   "enum": ["Pending", "Completed", "Failed"],
+                   "default": "Pending"
+               },
+               "transactionReference": { "type": "string", "description": "Reference from payment gateway", "nullable": true },
+               "createdAt": { "type": "string", "format": "date-time" },
+               "updatedAt": { "type": "string", "format": "date-time" }
+           }
+       },
+        "Category": {
+            "type": "object",
+            "properties": {
+                "_id": { "type": "string", "description": "MongoDB ObjectId" },
+                "categoryName": { "type": "string" },
+                "description": { "type": "string", "nullable": true },
+                 "createdAt": { "type": "string", "format": "date-time" },
+                "updatedAt": { "type": "string", "format": "date-time" }
+            }
+        },
+        "Address": {
+            "type": "object",
+            "properties": {
+                 "_id": { "type": "string", "description": "MongoDB ObjectId" },
+                 "userId": { "type": "string", "description": "MongoDB ObjectId of the user this address belongs to", "nullable": true },
+                 "street": { "type": "string" },
+                 "city": { "type": "string" },
+                 "state": { "type": "string", "nullable": true },
+                 "postalCode": { "type": "string", "nullable": true },
+                 "country": { "type": "string" },
+                 "createdAt": { "type": "string", "format": "date-time" },
+                 "updatedAt": { "type": "string", "format": "date-time" }
+            }
+        },
+       "Rating": {
+           "type": "object",
+           "properties": {
+               "_id": { "type": "string", "description": "MongoDB ObjectId" },
+               "reviewerId": { "type": "string", "description": "MongoDB ObjectId of the user giving the rating" },
+               "revieweeId": { "type": "string", "description": "MongoDB ObjectId of the user receiving the rating" },
+               "jobId": { "type": "string", "description": "MongoDB ObjectId of the related job" },
+               "rating": { "type": "integer", "description": "Rating value (e.g., 1-5)" },
+               "comment": { "type": "string", "description": "Review comment", "nullable": true },
+               "createdAt": { "type": "string", "format": "date-time" },
+               "updatedAt": { "type": "string", "format": "date-time" }
+           }
+       },
+        "Notification": {
+           "type": "object",
+           "properties": {
+              "_id": { "type": "string", "description": "MongoDB ObjectId" },
+              "userId": { "type": "string", "description": "MongoDB ObjectId of the user receiving the notification" },
+              "type": { "type": "string", "description": "Type of notification (e.g., 'bid', 'job', 'message')" },
+               "title": { "type": "string", "description": "Notification title" },
+              "message": { "type": "string", "description": "Notification message content" },
+              "read": { "type": "boolean", "description": "Whether the notification has been read", "default": false },
+              "data": {
+                 "type": "object",
+                 "additionalProperties": {},
+                 "description": "Optional structured data related to the notification (e.g., { jobId: '...' })",
+                 "nullable": true
+              },
+               "createdAt": { "type": "string", "format": "date-time" }
+           }
+        },
+       "GeoJSONPoint": {
+           "type": "object",
+           "properties": {
+               "type": {
+                   "type": "string",
+                   "enum": ["Point"]
+               },
+               "coordinates": {
+                   "type": "array",
+                   "items": { "type": "number", "format": "double" },
+                   "minItems": 2,
+                   "maxItems": 2,
+                   "description": "[longitude, latitude]"
+               }
+           },
+           "required": ["type", "coordinates"],
+            "description": "GeoJSON Point object for storing geographical coordinates [longitude, latitude]."
+       }
+    },
+    "securitySchemes": {
+      "ClerkAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authentication using Clerk. Obtain token from Clerk frontend SDK."
+      }
+    }
+  }
+}
