@@ -131,19 +131,9 @@ const Home = () => {
                             "transition-all duration-300 shadow-md hover:shadow-lg"
                         )}
                     >
-                        Register as Provider
+                        Register
                     </button>
-                    <button
-                        onClick={() => handleNavigation("/sign-up")}
-                        className={cn(
-                            "flex-1 px-6 py-3 text-lg font-semibold rounded-full",
-                             "bg-gradient-to-r from-yellow-500 to-orange-500",
-                            "text-white hover:from-yellow-600 hover:to-orange-600",
-                            "transition-all duration-300 shadow-md hover:shadow-lg"
-                        )}
-                    >
-                        Register as Seeker
-                    </button>
+                    
                 </div>
 
                 <footer className="mt-16 text-center text-gray-400">
